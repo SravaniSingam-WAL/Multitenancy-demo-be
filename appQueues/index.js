@@ -54,7 +54,14 @@ function bootstrap(){
         })
     
     })
-    queues[queueNames.Addition]
+    queues[queueNames.addition].process('Addition',Addition)
+
+    queues[queueNames.subtraction].process(Subtraction)
+    queues[queueNames.subtraction].add({},{repeat: { cron : '5 * * * *'}})
+ 
+    queues[queueNames.multiplication].process(Multiplication)
+    queues[queueNames.multiplication].add({},{repeat: { cron : '5 * * * *'}})
+ 
 }
 
 bootstrap()

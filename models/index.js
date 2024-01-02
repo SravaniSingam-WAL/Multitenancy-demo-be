@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize')
-const {tenantDbs} = require('../config')
+const {tenantDbs} = require('../config/db_config')
 const dbInstances = {};
 
 Object.entries(tenantDbs).forEach((tenant)=>{
