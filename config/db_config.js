@@ -12,6 +12,10 @@ const tenantDbs = {
   define: {
     timestamps: true
 },
+redis:{
+  port:6379,
+  host:'localhost',
+  },
   dialectOptions: {
     options: {
         requestTimeout: 300000,
@@ -40,6 +44,10 @@ const tenantDbs = {
   define: {
     timestamps: true
 },
+redis:{
+  port:6380,
+  host:'localhost',
+  },
   dialectOptions: {
     options: {
         requestTimeout: 300000,
@@ -68,6 +76,10 @@ const tenantDbs = {
   define: {
     timestamps: true
 },
+redis:{
+  port:6381,
+  host:'localhost',
+  },
   dialectOptions: {
     options: {
         requestTimeout: 300000,
@@ -96,6 +108,10 @@ const tenantDbs = {
   define: {
     timestamps: true
 },
+redis:{
+  port:6382,
+  host:'localhost',
+  },
   dialectOptions: {
     options: {
         requestTimeout: 300000,
@@ -123,6 +139,10 @@ const tenantDbs = {
   databaseVersion: '11.0.0',
   define: {
     timestamps: true
+},
+redis:{
+port:6384,
+host:'localhost',
 },
   dialectOptions: {
     options: {

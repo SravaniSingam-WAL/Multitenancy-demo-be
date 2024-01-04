@@ -10,7 +10,7 @@ async function Multiplication(job,done){
     }
     catch(err){
         logger.info(`Error for Multiplication App Queue ${err}`)
-        done(error)
+        done(err)
     }
 }
 exports.Multiplication = Multiplication

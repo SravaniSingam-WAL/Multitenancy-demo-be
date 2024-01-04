@@ -1,7 +1,7 @@
 const _ = require('lodash');
 
 const queueNames = {
-    addition : 'Addition_',
+    addition : 'AdditionQueue_',
     subtraction: 'Subtraction_',
     multiplication: 'Multiplication_'
 };

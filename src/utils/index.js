@@ -1,7 +1,6 @@
 
 function getIndexName(tenantId){
     let indexName = ''
-    console.log(tenantId)
     switch(tenantId){
       case '1':
         indexName='tenant-one-agreement'

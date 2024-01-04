@@ -9,14 +9,40 @@ app.use(cors());
 const initializeSearch = require('./common/initalize_search')
 const esAgreement = require('./src/elastic/agreement')
 const { getIndexName } =require('./src/utils')
+const areaMiddleware = require('./appQueues/arenaConfig')
+const queueNames = require('./src/app_queue/queueName.constant')
+const queueManager = require('./src/app_queue/queueManager')
+
+const tenantQueues = queueManager.getQueues()
+
 app.get("/", async (req, res) => {
-    console.log("Hello world");
     res.json("hello world");
+});
+
+app.use('/',areaMiddleware)
+
+app.get("/api/add", authentication,async (req, res) => {
+    const tenantId = req.headers["tenantid"];
+
+try{
+    const AdditionWorker = tenantQueues[tenantId][queueNames.addition]
+    await AdditionWorker.add('AdditionQueue',tenantId)
+    res.status(200).json({
+        success: true,
+        data: 'Queue was add successfully',
+    });
+
+}catch(err){
+    res.status(401).json({
+        success: false,
+        message: 'Invalid tenantId',
+    });
+
+}
 });
 
 app.get("/api/agreements", authentication,async (req, res) => {
     const tenantId = req.headers["tenantid"];
-    console.log(tenantId);
 try{
     const agreementDetails = await dbInstances[tenantId].Agreement.findAll()
     res.status(200).json({
@@ -25,7 +51,6 @@ try{
     });
 
 }catch(err){
-    console.log(err)
     res.status(401).json({
         success: false,
         message: 'Invalid tenantId',
@@ -37,11 +62,8 @@ try{
 
 app.get("/api/agreement/:contractNumber", authentication,async (req, res) => {
     const tenantId = req.headers["tenantid"];
-    console.log(tenantId,'TenantId'); 
-    console.log(req.params.contractNumber,'contract',req.params);
-try{
+ try{
     const indexName = getIndexName(tenantId)
-    console.log(indexName,'-indexName')
   
     let boolQuery = {
         bool: {
@@ -63,9 +85,7 @@ try{
             query: boolQuery
         }
     }) 
-    console.log(searchResults,'--searchResult')
     const searchData = await Promise.all(searchResults.hits.hits.map(async record => {
-        console.log(record,'--record')
         const agreementDetails = await dbInstances[tenantId].Agreement.findOne({
             where : {
                 id: record._source.id
@@ -94,20 +114,13 @@ try{
 
 app.post("/api/agreement", authentication,async (req, res) => {
     const tenantId = req.headers["tenantid"];
-    console.log(tenantId,'TenantId');
-    console.log(req.body,' value ')
-    console.log(req.body.contractInfo.contractNumber)
     const agreementData = {'id':req.body.contractInfo.id,'contractNumber': req.body.contractInfo.contractNumber,'userId':tenantId}
-    console.log(agreementData,'----------data---------')
-try{
+   try{
     let agreementDetails
     if(!req.body.contractInfo.id){
         agreementDetails = await dbInstances[tenantId].Agreement.create(agreementData)
-        console.log(agreementDetails)
-    }
+     }
     const indexName = getIndexName(tenantId)
-    console.log(indexName,'-indexName')
-    console.log(agreementDetails,'agreement Details',agreementDetails.id,agreementDetails.contractNumber)
     await esAgreement.save(indexName, agreementDetails || agreementData)
     res.status(200).json({
         success: true,
@@ -128,8 +141,7 @@ app.post("/api/login", async (req, res) => {
     const expireTime = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7;
     const { username, password } = req.body;
     const tenantId = req.headers["tenantid"];
-    console.log(tenantId,'Tenant Id');
-
+  
     try {
         const user = await dbInstances[tenantId].User.findOne({
             where: {
@@ -137,7 +149,6 @@ app.post("/api/login", async (req, res) => {
                 password: password
             },
         });
-        console.log(user)
         if (user) {
             const token = jwt.sign(
                 {
@@ -171,4 +182,4 @@ app.post("/api/login", async (req, res) => {
 app.listen(3030, async () => {
     console.log("server started on 3030");
     initializeSearch();
-});
+    });

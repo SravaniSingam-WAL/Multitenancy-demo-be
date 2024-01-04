@@ -10,7 +10,7 @@ async function Addition(job,done){
     }
     catch(err){
         logger.info(`Error for Addition App Queue ${err}`)
-        done(error)
+        done(err)
     }
 }
 exports.Addition = Addition

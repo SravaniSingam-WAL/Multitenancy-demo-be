@@ -36,12 +36,10 @@ catch(err){
 }
 
 async function saveDoc(indexName, agreementData, options) {
-    console.log(indexName)
   const body = {
     id: agreementData.id,
     contractNumber: agreementData.contractNumber,
   };
-console.log('body to store data in es',body,'---Index Name ------',indexName)
   return esClient.index({
     index: indexName,
     id: agreementData.id,
