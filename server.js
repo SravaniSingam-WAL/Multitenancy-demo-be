@@ -8,8 +8,12 @@ app.use(express.json());
 app.use(cors());
 const initializeSearch = require('./common/initalize_search')
 const esAgreement = require('./src/elastic/agreement')
+const tenantDb = require('./config/tenantConnection')
 const { getIndexName } =require('./src/utils')
 const areaMiddleware = require('./appQueues/arenaConfig')
+//  const {stripeClient} =require('./services/stripe')
+
+
 const queueNames = require('./src/app_queue/queueName.constant')
 const queueManager = require('./src/app_queue/queueManager')
 
@@ -136,6 +140,47 @@ app.post("/api/agreement", authentication,async (req, res) => {
 
 }
 });
+app.get( "/api/tenant/:tenantId/permissions", authentication, async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      console.log('=============================== Resutl')
+      console.log(models.Permissions.associations)
+      console.log(models.Application.associations)
+      let sequenceRow = await tenantDb.sequelize.query(`SELECT p.isAccess, app.name, app.url
+      FROM Permissions p
+      INNER JOIN Applications app ON p.applicationId = app.id
+      WHERE p.userId = ${tenantId}
+    `, { type: tenantDb.sequelize.QueryTypes.SELECT})
+          
+      const result = await models.Permissions.findAll({
+        attributes: ["isAccess"],
+        where: { userId:tenantId },
+        include: [
+          {
+            model: models.Application,
+            as: 'application',
+            attributes:['name', 'url'],
+            required: true,
+          },
+        ],
+      });
+    
+      console.log('**********completed')
+      console.log(result,'result data')
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+        console.log(error,'---------')
+      res.status(401).json({
+        success: false,
+        message: error,
+      });
+    }
+  }
+);
+
 app.post("/api/login", async (req, res) => {
     const secretToken = "secret_token";
     const expireTime = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7;
@@ -149,6 +194,7 @@ app.post("/api/login", async (req, res) => {
                 password: password
             },
         });
+        console.log(user,'User Details',tenantId)
         if (user) {
             const token = jwt.sign(
                 {
@@ -157,13 +203,22 @@ app.post("/api/login", async (req, res) => {
                     tenantId,
                 },
                 secretToken
-            );
+            );     
+            let permissions = await tenantDb.sequelize.query(`SELECT p.isAccess, app.name, app.url
+      FROM Permissions p
+      INNER JOIN Application app ON p.applicationId = app.id
+      WHERE p.userId = :tenantId
+    `, { replacements: { tenantId },type: tenantDb.sequelize.QueryTypes.SELECT})
+      console.log(permissions,'----------')
             res.status(200).json({
                 success: true,
                 user: {
                     email: username,
+                    name:user.name,
                     token: token,
+                    brandName: user.brandName,          
                 },
+                permissions
             });
         } else {
             res.status(401).json({
@@ -172,6 +227,7 @@ app.post("/api/login", async (req, res) => {
             });
         }
     } catch (error) {
+        console.log(error,'--')
         res.status(401).json({
             success: false,
             message: "Invalid username or password",
@@ -179,7 +235,8 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
-app.listen(3030, async () => {
+app.listen(3000, async () => {
     console.log("server started on 3030");
     initializeSearch();
+    //await stripeClient(2).createCustomer()
     });
